@@ -1,6 +1,7 @@
+# Nombre del workflow que aparece en la interfaz de GitHub
 name: Manual Integration Tests
 
-# Dejamos ÚNICAMENTE workflow_dispatch como el disparador
+# Disparador: Únicamente manual
 on:
   workflow_dispatch:
     inputs:
@@ -11,48 +12,42 @@ on:
         description: 'Docker Hub Access Token'
         required: true
 
-# ... el resto del archivo (jobs, steps, etc.) se queda igual ...
-      dockerhub_username:
-        description: 'Docker Hub Username'
-        required: true
-      dockerhub_token:
-        description: 'Docker Hub Access Token'
-        required: true
-
+# Trabajos que se van a ejecutar
 jobs:
+  # Nombre del job
   test-integration-scenarios:
+    # Entorno donde se ejecuta
     runs-on: ubuntu-latest
+    
+    # Pasos del job
     steps:
-      # 1. Descargamos el código
+      # 1. Descargar el código
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # -------------------------------------------------------------
-      # PRUEBA DE INTEGRACIÓN 1: Login a Docker Hub
-      # -------------------------------------------------------------
+      # 2. Prueba de Login a Docker Hub
       - name: Test Login to Docker Hub
-        uses: ./
+        uses: ./ # Usa la acción del repositorio local
         with:
-          # Usamos las entradas del workflow en lugar de los secretos
+          # Lee las entradas del formulario manual
           username: ${{ github.event.inputs.dockerhub_username }}
           password: ${{ github.event.inputs.dockerhub_token }}
 
+      # 3. Verificación del Login a Docker Hub
       - name: Verify Docker Hub Login
         run: |
           docker info | grep "Username"
           echo "✅ Docker Hub login successful!"
 
-      # -------------------------------------------------------------
-      # PRUEBA DE INTEGRACIÓN 2: Login a GitHub Container Registry (GHCR)
-      # -------------------------------------------------------------
-      # Esta prueba sigue funcionando igual, porque GITHUB_TOKEN es automático
+      # 4. Prueba de Login a GHCR
       - name: Test Login to GitHub Container Registry
-        uses: ./
+        uses: ./ # Usa la acción de nuevo
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # 5. Verificación del Login a GHCR
       - name: Verify GHCR Login
         run: |
           docker info | grep "ghcr.io"
