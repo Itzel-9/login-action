@@ -20,22 +20,25 @@ jobs:
   test-integration-scenarios:
 
     runs-on: ubuntu-latest
-
+  
     steps:
-
+  
       - name: Checkout repository
-
+  
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+  
+    - name: Setup Node.js
 
         uses: actions/setup-node@v4
         with:
           node-version: '16'
 
+
       # 3. Instala las dependencias y compila el proyecto (crea la carpeta 'dist')
       - name: Install dependencies and build with Yarn
         run: |
+          corepack enable 
           yarn install --frozen-lockfile
           yarn build
 
