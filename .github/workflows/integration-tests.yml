@@ -24,7 +24,16 @@ jobs:
       # 1. Descargar el código
       - name: Checkout repository
         uses: actions/checkout@v4
+    - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '16' # El proyecto usa Node.js 16
 
+  - name: Install dependencies and build
+    run: |
+      npm install
+      npm run build
+  # ===============================================
       # 2. Prueba de Login a Docker Hub
       - name: Test Login to Docker Hub
         uses: ./ # Usa la acción del repositorio local
@@ -52,3 +61,5 @@ jobs:
         run: |
           docker info | grep "ghcr.io"
           echo "✅ GHCR login successful!"
+
+          
