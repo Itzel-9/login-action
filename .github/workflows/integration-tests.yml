@@ -1,0 +1,57 @@
+name: Manual Integration Tests
+
+on:
+  push:
+  branches: [ main ]
+  pull_request:
+  branches: [ main ]
+
+# Esto habilita un botón "Run workflow" en la pestaña Actions
+on:
+  workflow_dispatch:
+    inputs:
+      dockerhub_username:
+        description: 'Docker Hub Username'
+        required: true
+      dockerhub_token:
+        description: 'Docker Hub Access Token'
+        required: true
+
+jobs:
+  test-integration-scenarios:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Descargamos el código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -------------------------------------------------------------
+      # PRUEBA DE INTEGRACIÓN 1: Login a Docker Hub
+      # -------------------------------------------------------------
+      - name: Test Login to Docker Hub
+        uses: ./
+        with:
+          # Usamos las entradas del workflow en lugar de los secretos
+          username: ${{ github.event.inputs.dockerhub_username }}
+          password: ${{ github.event.inputs.dockerhub_token }}
+
+      - name: Verify Docker Hub Login
+        run: |
+          docker info | grep "Username"
+          echo "✅ Docker Hub login successful!"
+
+      # -------------------------------------------------------------
+      # PRUEBA DE INTEGRACIÓN 2: Login a GitHub Container Registry (GHCR)
+      # -------------------------------------------------------------
+      # Esta prueba sigue funcionando igual, porque GITHUB_TOKEN es automático
+      - name: Test Login to GitHub Container Registry
+        uses: ./
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify GHCR Login
+        run: |
+          docker info | grep "ghcr.io"
+          echo "✅ GHCR login successful!"

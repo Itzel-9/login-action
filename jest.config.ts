@@ -1,30 +1,24 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+// jest.config.js
 
-const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-login-action-')).split(path.sep).join(path.posix.sep);
-
-process.env = Object.assign({}, process.env, {
-  TEMP: tmpDir,
-  GITHUB_REPOSITORY: 'docker/login-action',
-  RUNNER_TEMP: path.join(tmpDir, 'runner-temp').split(path.sep).join(path.posix.sep),
-  RUNNER_TOOL_CACHE: path.join(tmpDir, 'runner-tool-cache').split(path.sep).join(path.posix.sep)
-}) as {
-  [key: string]: string;
-};
-
-module.exports = {
+export default {
   clearMocks: true,
-  testEnvironment: 'node',
   moduleFileExtensions: ['js', 'ts'],
-  testMatch: ['**/*.test.ts'],
-  transform: {
-    '^.+\\.ts$': 'ts-jest'
-  },
+  // Usamos el preset de ts-jest optimizado para Módulos ESM con node
+  preset: 'ts-jest/presets/default-esm', 
+  testEnvironment: 'node',
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  // Esta línea es crucial. Resuelve cómo Jest importa los módulos.
   moduleNameMapper: {
-    '^csv-parse/sync': '<rootDir>/node_modules/csv-parse/dist/cjs/sync.cjs'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  collectCoverageFrom: ['src/**/{!(main.ts),}.ts'],
-  coveragePathIgnorePatterns: ['lib/', 'node_modules/', '__tests__/'],
+  transform: {
+    // Le decimos que use el transformador de ts-jest para ESM
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true,
+      },
+    ],
+  },
   verbose: true
 };

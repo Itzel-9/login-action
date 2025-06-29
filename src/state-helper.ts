@@ -1,12 +1,26 @@
-import * as core from '@actions/core';
+// src/state-helper.ts
 
-export const registry = process.env['STATE_registry'] || '';
-export const logout = /true/i.test(process.env['STATE_logout'] || '');
+import * as os from 'os';
+import * as path from 'path';
 
-export function setRegistry(registry: string) {
-  core.saveState('registry', registry);
+// ... otro código del archivo ...
+
+// La función ahora es pública y puede ser importada por otros archivos.
+export function getDockerConfig(): string { // <-- ¡LA CORRECCIÓN CLAVE!
+  const dockerConfigPath = path.join(os.homedir(), '.docker');
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const dconfig = require(path.join(dockerConfigPath, 'config.json'));
+    if ('auths' in dconfig) {
+      return JSON.stringify(dconfig.auths, null, 2);
+    }
+  } catch (err) {
+    // El error se captura silenciosamente, y la función continúa.
+  }
+
+  // ... lógica para cred-helpers ...
+
+  return '';
 }
 
-export function setLogout(logout: boolean) {
-  core.saveState('logout', logout);
-}
+// ... resto del código del archivo ...
