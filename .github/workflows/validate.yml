@@ -1,43 +1,46 @@
-name: validate
+# Este es el nombre que verás en la pestaña "Actions" de GitHub
+name: 'Test y Validación'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+# Define cuándo se debe ejecutar este workflow
 on:
+  # Se ejecuta cuando haces 'push' a las ramas 'master' o 'main'
   push:
     branches:
-      - 'master'
-      - 'releases/v*'
+      - master
+      - main
+  # También se ejecuta cuando se crea o actualiza un Pull Request
   pull_request:
+    branches:
+      - master
+      - main
 
+# Define los trabajos (jobs) que se van a ejecutar
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      targets: ${{ steps.generate.outputs.targets }}
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v4
-      -
-        name: List targets
-        id: generate
-        uses: docker/bake-action/subaction/list-targets@v6
-        with:
-          target: validate
-
+  # Nombramos nuestro trabajo 'validate'
   validate:
+    # El trabajo se ejecutará en una máquina virtual de Ubuntu
     runs-on: ubuntu-latest
-    needs:
-      - prepare
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{ fromJson(needs.prepare.outputs.targets) }}
+
+    # Estos son los pasos que seguirá el trabajo
     steps:
-      -
-        name: Validate
-        uses: docker/bake-action@v6
+      # Paso 1: Descarga tu código del repositorio a la máquina virtual
+      - name: 'Revisar el código'
+        uses: actions/checkout@v3
+
+      # Paso 2: Configura el entorno de Node.js y Yarn
+      - name: 'Configurar Node.js y Yarn'
+        uses: actions/setup-node@v3
         with:
-          targets: ${{ matrix.target }}
+          node-version: '20'
+
+      # Paso 3: Habilita corepack para usar la versión correcta de Yarn
+      - name: 'Habilitar Corepack'
+        run: corepack enable
+
+      # Paso 4: Instala las dependencias de forma exacta usando yarn.lock
+      - name: 'Instalar dependencias'
+        run: yarn install --immutable
+
+      # Paso 5: Compila el código de TypeScript a JavaScript
+      - name: 'Construir el proyecto'
+        run: yarn build
